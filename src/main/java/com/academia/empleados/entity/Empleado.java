@@ -1,47 +1,32 @@
 package com.academia.empleados.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "empleados")
+@Document("empleados")
 public class Empleado {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false, length = 60)
     private String nombre;
-
-    @Column(nullable = false, length = 80)
     private String apellidos;
 
-    @Column(nullable = false, unique = true, length = 120)
+    @Indexed(unique = true)
     private String email;
 
-    @Column(nullable = false, length = 60)
     private String puesto;
-
-    @Column(nullable = false, length = 60)
     private String departamento;
-
-    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal salario;
-
-    @Column(name = "fecha_ingreso", nullable = false)
     private LocalDate fechaIngreso;
-
-    @Column(nullable = false)
     private boolean activo = true;
 
-    protected Empleado() {}
+    protected Empleado() {
+    }
 
     public Empleado(String nombre, String apellidos, String email, String puesto,
                     String departamento, BigDecimal salario, LocalDate fechaIngreso) {
@@ -54,7 +39,7 @@ public class Empleado {
         this.fechaIngreso = fechaIngreso;
     }
 
-    public Long getId() { return id; }
+    public String getId() { return id; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
     public String getApellidos() { return apellidos; }
