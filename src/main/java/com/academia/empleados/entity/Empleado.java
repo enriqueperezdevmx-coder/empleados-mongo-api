@@ -6,6 +6,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document("empleados")
 public class Empleado {
@@ -24,6 +26,9 @@ public class Empleado {
     private BigDecimal salario;
     private LocalDate fechaIngreso;
     private boolean activo = true;
+
+    private Direccion direccion;
+    private List<String> habilidades = new ArrayList<>();
 
     protected Empleado() {
     }
@@ -56,4 +61,8 @@ public class Empleado {
     public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
+    public Direccion getDireccion() { return direccion; }
+    public void setDireccion(Direccion direccion) { this.direccion = direccion; }
+    public List<String> getHabilidades() { return habilidades; }
+    public void setHabilidades(List<String> habilidades) { this.habilidades = habilidades; }
 }

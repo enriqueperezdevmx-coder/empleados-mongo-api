@@ -2,6 +2,7 @@ package com.academia.empleados.controller;
 
 import com.academia.empleados.dto.EmpleadoRequest;
 import com.academia.empleados.dto.EmpleadoResponse;
+import com.academia.empleados.dto.EstadisticaDepartamento;
 import com.academia.empleados.dto.PaginaResponse;
 import com.academia.empleados.service.EmpleadoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +46,7 @@ public class EmpleadoController {
 
     @GetMapping
     @Operation(summary = "Listar empleados, por páginas",
-            description = "page empieza en 0, sort: campo,dirección ej. salario,desc o apellidos,asc")
+            description = "page empieza en 0. sort: campo,dirección ej. salario,desc o apellidos,asc")
     public PaginaResponse<EmpleadoResponse> listar(
             @ParameterObject @PageableDefault(size = 10, sort = "id") Pageable pageable) {
         return service.listar(pageable);
@@ -53,7 +54,8 @@ public class EmpleadoController {
 
     @GetMapping("/buscar")
     @Operation(summary = "Buscar con filtros opcionales, por páginas",
-            description = "Todos los filtros son opcionales y se combinan (Y); texto busca en nombre y apellidos")
+            description = "Todos los filtros son opcionales y se combinan (Y). texto busca en nombre y apellidos; " +
+                    "ciudad busca en la dirección; habilidad, en la lista de habilidades. Sin importar acentos ni mayúsculas")
     @ApiResponse(responseCode = "200", description = "Página de resultados (puede venir vacía)")
     @ApiResponse(responseCode = "400", description = "Parámetro inválido (ej. ordenar por un campo que no existe)",
             content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
@@ -63,8 +65,17 @@ public class EmpleadoController {
             @RequestParam(required = false) Boolean activo,
             @RequestParam(required = false) BigDecimal salarioMinimo,
             @RequestParam(required = false) BigDecimal salarioMaximo,
+            @RequestParam(required = false) String ciudad,
+            @RequestParam(required = false) String habilidad,
             @ParameterObject @PageableDefault(size = 10, sort = "id") Pageable pageable) {
-        return service.buscar(departamento, texto, activo, salarioMinimo, salarioMaximo, pageable);
+        return service.buscar(departamento, texto, activo, salarioMinimo, salarioMaximo, ciudad, habilidad, pageable);
+    }
+
+    @GetMapping("/estadisticas/departamentos")
+    @Operation(summary = "Por departamento: empleados, activos y salario promedio, mínimo y máximo",
+            description = "Una agregación de MongoDB ($group), el equivalente a un GROUP BY de SQL")
+    public List<EstadisticaDepartamento> estadisticasPorDepartamento() {
+        return service.estadisticasPorDepartamento();
     }
 
     @GetMapping("/departamento/{departamento}")
@@ -76,7 +87,7 @@ public class EmpleadoController {
     @GetMapping("/salarios")
     @Operation(summary = "Empleados con salario entre mínimo y máximo, del mayor al menor")
     public List<EmpleadoResponse> porRangoDeSalario(@RequestParam BigDecimal minimo,
-                                                   @RequestParam BigDecimal maximo) {
+                                                    @RequestParam BigDecimal maximo) {
         return service.porRangoDeSalario(minimo, maximo);
     }
 

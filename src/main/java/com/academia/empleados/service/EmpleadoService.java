@@ -2,6 +2,7 @@ package com.academia.empleados.service;
 
 import com.academia.empleados.dto.EmpleadoRequest;
 import com.academia.empleados.dto.EmpleadoResponse;
+import com.academia.empleados.dto.EstadisticaDepartamento;
 import com.academia.empleados.dto.PaginaResponse;
 import com.academia.empleados.entity.Empleado;
 import com.academia.empleados.exception.EmailDuplicadoException;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,15 +27,16 @@ public class EmpleadoService {
     }
 
     public PaginaResponse<EmpleadoResponse> listar(Pageable pageable) {
+        validarOrden(pageable);
         return PaginaResponse.desde(repository.findAll(pageable), EmpleadoResponse::desde);
     }
 
     public PaginaResponse<EmpleadoResponse> buscar(String departamento, String texto, Boolean activo,
                                                    BigDecimal salarioMinimo, BigDecimal salarioMaximo,
-                                                   Pageable pageable) {
+                                                   String ciudad, String habilidad, Pageable pageable) {
         validarOrden(pageable);
         return PaginaResponse.desde(
-                repository.buscar(departamento, texto, activo, salarioMinimo, salarioMaximo, pageable),
+                repository.buscar(departamento, texto, activo, salarioMinimo, salarioMaximo, ciudad, habilidad, pageable),
                 EmpleadoResponse::desde);
     }
 
@@ -48,6 +52,13 @@ public class EmpleadoService {
                 .toList();
     }
 
+    public List<EstadisticaDepartamento> estadisticasPorDepartamento() {
+        return repository.estadisticasPorDepartamento().stream()
+                .map(e -> new EstadisticaDepartamento(e.departamento(), e.empleados(), e.activos(),
+                        e.salarioPromedio().setScale(2, RoundingMode.HALF_UP), e.salarioMinimo(), e.salarioMaximo()))
+                .toList();
+    }
+
     public EmpleadoResponse buscarPorId(String id) {
         return EmpleadoResponse.desde(obtener(id));
     }
@@ -58,7 +69,8 @@ public class EmpleadoService {
         }
         Empleado empleado = new Empleado(datos.nombre(), datos.apellidos(), datos.email(), datos.puesto(),
                 datos.departamento(), datos.salario(), datos.fechaIngreso());
-        empleado.setActivo(datos.activo() != null ? datos.activo() : true);
+        empleado.setActivo(datos.activo() == null || datos.activo());
+        copiarDireccionYHabilidades(datos, empleado);
         return EmpleadoResponse.desde(repository.save(empleado));
     }
 
@@ -74,7 +86,8 @@ public class EmpleadoService {
         empleado.setDepartamento(datos.departamento());
         empleado.setSalario(datos.salario());
         empleado.setFechaIngreso(datos.fechaIngreso());
-        empleado.setActivo(datos.activo() != null ? datos.activo() : true);
+        empleado.setActivo(datos.activo() == null || datos.activo());
+        copiarDireccionYHabilidades(datos, empleado);
         return EmpleadoResponse.desde(repository.save(empleado));
     }
 
@@ -84,6 +97,11 @@ public class EmpleadoService {
 
     private void validarOrden(Pageable pageable) {
         pageable.getSort().forEach(orden -> PropertyPath.from(orden.getProperty(), Empleado.class));
+    }
+
+    private void copiarDireccionYHabilidades(EmpleadoRequest datos, Empleado empleado) {
+        empleado.setDireccion(datos.direccion() == null ? null : datos.direccion().aEntidad());
+        empleado.setHabilidades(datos.habilidades() == null ? new ArrayList<>() : new ArrayList<>(datos.habilidades()));
     }
 
     private Empleado obtener(String id) {

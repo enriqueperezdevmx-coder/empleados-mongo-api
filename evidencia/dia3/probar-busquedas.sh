@@ -5,7 +5,7 @@ resumen() { python3 -c '
 import json, sys
 d = json.load(sys.stdin)
 def fila(e):
-    return "%2d %-10s %-20s | %-12s | %8.1f%s" % (
+    return "%-24s %-10s %-20s | %-12s | %8.1f%s" % (
         e["id"], e["nombre"], e["apellidos"], e["departamento"], e["salario"],
         "" if e["activo"] else " INACTIVO"
     )
